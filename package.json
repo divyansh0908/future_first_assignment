@@ -1,0 +1,15 @@
+{
+  "name": "future_first_assignment",
+  "version": "1.0.0",
+  "description": "A simple server to serve an HTML page using D3.js for visualizations.",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js"
+  },
+  "dependencies": {
+    "d3": "^7.0.0",
+    "express": "^4.17.1"
+  },
+  "author": "",
+  "license": "ISC"
+}
