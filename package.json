@@ -4,7 +4,8 @@
   "description": "A simple server to serve an HTML page using D3.js for visualizations.",
   "main": "src/server.js",
   "scripts": {
-    "start": "node src/server.js"
+    "start": "node src/server.js",
+    "dev": "tsc --watch && node src/server.js"
   },
   "dependencies": {
     "@types/d3": "^7.4.3",

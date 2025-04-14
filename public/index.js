@@ -1,104 +1,6 @@
-import * as d3 from "../node_modules/d3/src/index.js";
-import { D3ZoomEvent } from "../node_modules/d3/src/index.js";
+import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7/+esm";
 
-interface IOHLCVCandleData {
-  date: string;
-  open: number;
-  high: number;
-  low: number;
-  close: number;
-  volume: number;
-}
-
-/**
- * {
-    width: width,
-    height: height,
-    candleTailWidth: 1,
-    paddingLeft: 25,
-    paddingTop: 10,
-    paddingBottom: 30,
-    yPaddingScaleTop: 0.04,
-    yPaddingScaleBottom: 0.03,
-    xTicksTransform: 10,
-    xLabelWidth: 150,
-    xLabelHeight: 25,
-    xLabelFontSize: 12,
-    yLabelHeight: 25,
-    yLabelFontSize: 12,
-    decimal: 3,
-    charWidth: 7.8,
-    selectoreStrokeDashArray: "2,2",
-    timeFormat: "%a %d %b '%y %H:%M",
-    mobileBreakPoint: 600,
-    //calcualte after set data//
-    infoTextWidth: undefined,
-    infoTextWidthMeta: undefined,
-    yLabelWidth: undefined,
-    paddingRight: undefined,
-    svgWidth: undefined,
-    svgHeight: undefined,
-  };
- */
-interface IChartConfig {
-  width: number;
-  height: number;
-  candleTailWidth: number;
-  paddingLeft: number;
-  paddingTop: number;
-  paddingBottom: number;
-  yPaddingScaleTop: number;
-  yPaddingScaleBottom: number;
-  xTicksTransform: number;
-  xLabelWidth: number;
-  xLabelHeight: number;
-  xLabelFontSize: number;
-  yLabelHeight: number;
-  yLabelFontSize: number;
-  decimal: number;
-  charWidth: number;
-  selectoreStrokeDashArray: string;
-  timeFormat: string;
-  mobileBreakPoint: number;
-  infoTextWidth?: number;
-  infoTextWidthMeta?: number;
-  yLabelWidth?: number;
-  paddingRight: number;
-  svgWidth: number;
-  svgHeight: number;
-}
-
-interface IColors {
-  grid: string;
-  background: string;
-  candleInfoText: string;
-  candleInfoTextUp: string;
-  candleInfoTextDown: string;
-  tickColor: string;
-  downCandlesStroke: string;
-  downCandlesFill: string;
-  downCandlesTail: string;
-  upCandlesStroke: string;
-  upCandlesFill: string;
-  upCandlesTail: string;
-  selectorLine: string;
-  selectorLableBackground: string;
-  selectorLabelText: string;
-  short: string;
-  shortStroke: string;
-  long: string;
-  longStroke: string;
-  sl: string;
-  slStroke: string;
-  tp: string;
-  tpStroke: string;
-  activeTools: string;
-  deActiveTools: string;
-}
-
-type TInterval = "1M" | "1H" | "4H" | "1D";
-
-const oneDayData: IOHLCVCandleData[] = [
+const oneDayData = [
   {
     date: "2025-02-23",
     open: 100,
@@ -501,9 +403,9 @@ const oneDayData: IOHLCVCandleData[] = [
   },
 ];
 
-const oneHourData: IOHLCVCandleData[] = [
+const oneHourData = [
   {
-    date: "2025-04-07T09:30:00.000Z",
+    timdate: "2025-04-07T09:30:00.000Z",
     open: 100,
     high: 101.32,
     close: 100.63,
@@ -1464,7 +1366,7 @@ const oneHourData: IOHLCVCandleData[] = [
   },
 ];
 
-const oneMinuteData: IOHLCVCandleData[] = [
+const oneMinuteData = [
   {
     date: "2025-04-14 09:15:00",
     open: 100,
@@ -1867,7 +1769,7 @@ const oneMinuteData: IOHLCVCandleData[] = [
   },
 ];
 
-const fourHourData: IOHLCVCandleData[] = [
+const fourHourData = [
   {
     date: "2025-04-06 02:30",
     open: 100,
@@ -2270,23 +2172,11 @@ const fourHourData: IOHLCVCandleData[] = [
   },
 ];
 
-/**
- * Function to parse date strings into Date objects
- * @param {string} dateStr - The date string to parse
- * @return {Date} - The parsed Date object
- */
-const parseDate = (dateStr: string) => new Date(dateStr);
+export const parseDate = (dateStr) => new Date(dateStr);
 
-/**
- * Function to get the cursor point in SVG coordinates, this is used to get the
- * position of the mouse in the SVG element.
- */
-export const getCursorPoint = (id: unknown, evt: unknown) => {
-  let svg: SVGSVGElement = document.querySelector(`#${id}`) as SVGSVGElement;
-  if (!svg) {
-    throw new Error(`SVG element with id "${id}" not found.`);
-  }
-  let pt = (svg as SVGSVGElement).createSVGPoint();
+export const getCursorPoint = (id, evt) => {
+  let svg = document.querySelector(`#${id}`);
+  let pt = svg.createSVGPoint();
   let cursorPoint = (evt) => {
     if (evt.touches && evt.touches[0]) {
       pt.x = evt.touches[0].clientX;
@@ -2296,11 +2186,7 @@ export const getCursorPoint = (id: unknown, evt: unknown) => {
       pt.y = evt.clientY;
     }
 
-    const screenCTM = svg.getScreenCTM();
-    if (!screenCTM) {
-      throw new Error("Unable to get screen CTM from the SVG element.");
-    }
-    return pt.matrixTransform(screenCTM.inverse());
+    return pt.matrixTransform(svg.getScreenCTM().inverse());
   };
 
   return cursorPoint(evt);
@@ -2308,13 +2194,9 @@ export const getCursorPoint = (id: unknown, evt: unknown) => {
 
 export const findFixedDataIndex = (dataPoint, data) => {
   let index = 0;
-  let min = Math.abs(
-    parseDate(dataPoint).getTime() - parseDate(data[0].date).getTime()
-  );
+  let min = Math.abs(parseDate(dataPoint) - parseDate(data[0].date));
   for (let i = 0; i < data.length; i++) {
-    let newMin = Math.abs(
-      parseDate(dataPoint).getTime() - parseDate(data[i].date).getTime()
-    );
+    let newMin = Math.abs(parseDate(dataPoint) - parseDate(data[i].date));
     if (newMin < min) {
       min = newMin;
       index = i;
@@ -2323,10 +2205,7 @@ export const findFixedDataIndex = (dataPoint, data) => {
   return index;
 };
 
-/**
- * Function that returns the colors used in the chart
- */
-export const colors = (): IColors => {
+export const colors = () => {
   return {
     grid: "#222631",
     background: "#171b26",
@@ -2356,12 +2235,7 @@ export const colors = (): IColors => {
   };
 };
 
-interface Colors {
-  // Define color properties based on your colors() function
-  [key: string]: string;
-}
-
-export const config = (width: number, height: number): IChartConfig => {
+export const config = (width, height) => {
   return {
     width: width,
     height: height,
@@ -2385,18 +2259,18 @@ export const config = (width: number, height: number): IChartConfig => {
     //calcualte after set data//
     infoTextWidth: undefined,
     infoTextWidthMeta: undefined,
-    yLabelWidth: 20,
-    paddingRight: 10,
-    svgWidth: window.innerWidth,
-    svgHeight: window.innerHeight - 50,
+    yLabelWidth: undefined,
+    paddingRight: undefined,
+    svgWidth: undefined,
+    svgHeight: undefined,
   };
 };
 
-const calculateSMA = (data: IOHLCVCandleData[], period: number) => {
-  let sma: (number | undefined)[] = [];
+const calculateSMA = (data, period) => {
+  let sma = [];
   for (let i = 0; i < data.length; i++) {
     if (i < period - 1) {
-      sma.push(undefined); // Not enough data for SMA
+      sma.push(null); // Not enough data for SMA
     } else {
       let sum = 0;
       for (let j = 0; j < period; j++) {
@@ -2408,64 +2282,48 @@ const calculateSMA = (data: IOHLCVCandleData[], period: number) => {
   return sma;
 };
 
-type TMode = "pan" | "zoom";
-
 class CandleStickChart {
-  #colors: IColors;
-  #config: IChartConfig;
-  #maxPrice: number;
-  #lockSelectorX: boolean;
-  #objectIDs!: Record<string, string>;
-  #xScaleFunc!: d3.ScaleTime<number, number>;
-  #yScaleFunc!: d3.ScaleLinear<number, number>;
-  #volumeScaleFunc!: d3.ScaleLinear<number, number>;
-  #candleWidth!: number;
-  #candleWidthDate!: number;
-  #candleLockerWidth!: number;
-  #candleLockerWidthDate!: number;
-  #filteredData: IOHLCVCandleData[];
-  #mode!: TMode;
-  data: IOHLCVCandleData[];
-  id: string;
-  isLiveChart: boolean;
-  isLineChart: boolean;
-  smaPeriod: number;
-  #isMouseDown: boolean = false;
-  #zoomPoint1!: number;
-  #zoomPoint2!: number;
-  #zoomRange1: number;
-  #zoomRange2: number;
-  #minMaxDate: [Date, Date];
-  #zoomFactor: number = 1;
-  #panTargetDate!: number;
-  #selectedTimeInterval: TInterval;
-  #showSma: boolean;
-  liveFeedInterval: NodeJS.Timeout | number | undefined;
+  #colors;
+  #config;
+  #maxPrice;
+  #lockSelectorX;
+  #objectIDs;
+  #xScaleFunc;
+  #yScaleFunc;
+  #volumeScaleFunc;
+  #candleWidth;
+  #candleWidthDate;
+  #candleLockerWidth;
+  #candleLockerWidthDate;
+  #filteredData;
+  #mode;
+  #isMouseDown = false;
+  #zoomPoint1;
+  #zoomPoint2;
+  #zoomRange1;
+  #zoomRange2;
+  #minMaxDate;
+  #zoomFactor = 1;
+  #panTargetDate;
+  #selectedTimeInterval;
+  #showSma;
 
-  constructor(
-    width: number,
-    height: number,
-    data: IOHLCVCandleData[],
-    id: string
-  ) {
+  constructor(width, height, data, id) {
     this.#colors = colors();
     this.#config = config(width, height);
-    this.#maxPrice = d3.max(data.map((x) => x.high)) || 0;
-    this.data = data.sort(
-      (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
-    );
+    this.#maxPrice = d3.max(data.map((x) => x.high));
+    this.data = data.sort((a, b) => parseDate(a) - parseDate(b));
     this.#filteredData = data;
     this.id = id;
     this.#lockSelectorX = false;
-    const minMaxDate = d3.extent(data.map((x) => new Date(x.date))) as [
-      Date,
-      Date
-    ];
+    this.#calculateExtendConfigs();
     this.#setObjectIDs();
+    let minMaxDate = d3.extent(data.map((x) => parseDate(x.date)));
     this.#calculateCandleWidthDate();
     this.#minMaxDate = minMaxDate;
     this.#zoomRange1 = minMaxDate[0].getTime() - this.#candleWidthDate / 2;
     this.#zoomRange2 = minMaxDate[1].getTime() + this.#candleWidthDate / 2;
+    this.#createToolsBtns();
     this.#modeHandler("pan");
     this.isLiveChart = false;
     this.isLineChart = false;
@@ -2474,15 +2332,11 @@ class CandleStickChart {
     this.smaPeriod = 5;
   }
 
-  #getColors() {
-    return this.#colors;
-  }
-
   /**
    *
    * @param {*} id : "1D", "1H", "4H"
    */
-  #loadData(id: TInterval) {
+  #loadData(id) {
     console.log("load data", this.data.slice(0, 5));
     let data = oneHourData;
     switch (id) {
@@ -2512,6 +2366,8 @@ class CandleStickChart {
     this.destroy();
     this.#calculateCandleWidthDate();
     this.#calculateXscale();
+    this.#createYaxis();
+    this.#createXaxis();
     this.#calculateYscale();
     this.#calculateCandleWidth();
 
@@ -2521,7 +2377,9 @@ class CandleStickChart {
   #calculateInfoTextWidth() {
     console.log(this.#maxPrice);
     this.#config.infoTextWidth =
-      (this.#maxPrice.toFixed(this.#config.decimal).toString().length * 4 +
+      (this.#maxPrice.toFixed(this.#config.decimal).toString()
+        .length *
+        4 +
         11) *
       this.#config.charWidth;
   }
@@ -2538,12 +2396,12 @@ class CandleStickChart {
       period
     );
     const line = d3
-      .line<number>()
+      .line()
       .x((d, i) => this.#xScaleFunc(parseDate(this.#filteredData[i].date)))
       .y((d) => (d !== null ? this.#yScaleFunc(d) : null))
       .defined((d) => d !== null);
 
-    d3.select<SVGElement, IOHLCVCandleData>(`#${this.#objectIDs.svgId}`)
+    d3.select(`#${this.#objectIDs.svgId}`)
       .append("path")
       .datum(smaData)
       .attr("fill", "none")
@@ -2568,7 +2426,7 @@ class CandleStickChart {
   }
 
   #calculatePaddingRight() {
-    this.#config.paddingRight = this.#config.yLabelWidth ?? 10;
+    this.#config.paddingRight = this.#config.yLabelWidth;
   }
 
   #calculateSvgWidth() {
@@ -2590,8 +2448,8 @@ class CandleStickChart {
 
     this.#xScaleFunc = d3
       .scaleTime()
-      .domain([minDate ?? new Date(0), maxDate ?? new Date()]) // Ensure no undefined values
-      .range([0, this.#config.svgWidth ?? 0]);
+      .domain([minDate, maxDate]) // Update domain based on new date range
+      .range([0, this.#config.svgWidth]);
   }
 
   #calculateYscale() {
@@ -2603,14 +2461,13 @@ class CandleStickChart {
         .extent([
           ...this.#filteredData.map((x) => x.high),
           ...this.#filteredData.map((x) => x.low),
+          ...this.#filteredData.map((x) => x.sl),
+          ...this.#filteredData.map((x) => x.tp),
         ])
         .reverse();
 
-      yMinMax[0] =
-        (yMinMax[0] ?? 0) + (yMinMax[0] ?? 0) * this.#config.yPaddingScaleTop;
-      if (yMinMax[1] !== undefined) {
-        yMinMax[1] -= yMinMax[1] * this.#config.yPaddingScaleBottom;
-      }
+      yMinMax[0] += yMinMax[0] * this.#config.yPaddingScaleTop;
+      yMinMax[1] -= yMinMax[1] * this.#config.yPaddingScaleBottom;
     }
     this.#yScaleFunc = d3
       .scaleLinear()
@@ -2621,11 +2478,8 @@ class CandleStickChart {
     const volumeMax = d3.max(this.#filteredData, (d) => d.volume);
     this.#volumeScaleFunc = d3
       .scaleLinear()
-      .domain([0, volumeMax ?? 0])
-      .range([
-        (this.#config.svgHeight ?? 0) * 0.7,
-        this.#config.svgHeight ?? 0,
-      ]);
+      .domain([0, volumeMax])
+      .range([this.#config.svgHeight * 0.7, this.#config.svgHeight]);
   }
 
   #calculateCandleWidth() {
@@ -2636,9 +2490,8 @@ class CandleStickChart {
     }
     let minMax = d3.extent(this.#filteredData.map((x) => parseDate(x.date)));
     this.#candleLockerWidth =
-      this.#xScaleFunc(
-        (minMax[0]?.getTime() ?? 0) + this.#candleLockerWidthDate
-      ) - this.#xScaleFunc(minMax[0]?.getTime() ?? 0);
+      this.#xScaleFunc(minMax[0].getTime() + this.#candleLockerWidthDate) -
+      this.#xScaleFunc(minMax[0].getTime());
     console.log("this.#candleLockerWidth", this.#candleLockerWidth);
     this.#candleWidth =
       this.#candleLockerWidth - this.#candleLockerWidth * 0.13;
@@ -2648,20 +2501,15 @@ class CandleStickChart {
   #calculateCandleWidthDate() {
     let times = this.#filteredData.map((x) => x.date).sort();
     let indexes = [0, 1];
-    let min = parseDate(times[1]).getTime() - parseDate(times[0]).getTime();
+    let min = parseDate(times[1]) - parseDate(times[0]);
     for (let i = 1; i < times.length; i++) {
-      if (
-        parseDate(times[i + 1]).getTime() - parseDate(times[i]).getTime() <
-        min
-      ) {
-        min = parseDate(times[i + 1]).getTime() - parseDate(times[i]).getTime();
+      if (parseDate(times[i + 1]) - parseDate(times[i]) < min) {
+        min = parseDate(times[i + 1]) - parseDate(times[i]);
         indexes = [i, i + 1];
       }
     }
 
-    let rWidth =
-      parseDate(times[indexes[1]]).getTime() -
-      parseDate(times[indexes[0]]).getTime();
+    let rWidth = parseDate(times[indexes[1]]) - parseDate(times[indexes[0]]);
     this.#candleLockerWidthDate = rWidth;
     rWidth -= rWidth * 0.3;
     this.#candleWidthDate = rWidth;
@@ -2708,8 +2556,8 @@ class CandleStickChart {
       .attr("width", this.#config.width)
       .attr("height", this.#config.height)
       .append("svg")
-      .attr("width", this.#config.svgWidth ?? 0)
-      .attr("height", this.#config.svgHeight ?? 0)
+      .attr("width", this.#config.svgWidth)
+      .attr("height", this.#config.svgHeight)
       .style("overflow", "inherit")
       .style("cursor", "crosshair")
       .attr("id", this.#objectIDs.svgId)
@@ -2718,17 +2566,15 @@ class CandleStickChart {
 
   #createYaxis() {
     console.log(this.#yScaleFunc);
-    let yAxis = d3
-      .axisRight(this.#yScaleFunc)
-      .tickSize(this.#config.svgWidth ?? 10);
+    let yAxis = d3.axisRight(this.#yScaleFunc).tickSize(this.#config.svgWidth);
     d3.select(`#${this.#objectIDs.svgId}`)
       .append("g")
       .attr("id", this.#objectIDs.yAxisId)
       .call(yAxis);
 
-    // d3.selectAll(`#${this.#objectIDs.yAxisId} .domain`).each(function (d, i) {
-    //   this.remove();
-    // });
+    d3.selectAll(`#${this.#objectIDs.yAxisId} .domain`).each(function (d, i) {
+      this.remove();
+    });
 
     d3.selectAll(`#${this.#objectIDs.yAxisId}  g text`).attr(
       "transform",
@@ -2740,7 +2586,7 @@ class CandleStickChart {
       d,
       i
     ) {
-      d3.select(this).style("stroke", gridColor);
+      this.style.stroke = gridColor;
     });
     d3.selectAll(`#${this.#objectIDs.yAxisId} .tick text`).style(
       "fill",
@@ -2751,8 +2597,8 @@ class CandleStickChart {
   #createXaxis() {
     let xAxis = d3
       .axisBottom(this.#xScaleFunc)
-      .ticks((this.#config.svgWidth ?? 0) / 100)
-      .tickSize(this.#config.svgHeight ?? 10);
+      .ticks(this.#config.svgWidth / 100)
+      .tickSize(this.#config.svgHeight);
 
     d3.select(`#${this.#objectIDs.svgId}`)
       .append("g")
@@ -2769,11 +2615,11 @@ class CandleStickChart {
       d,
       i
     ) {
-      d3.select(this).style("stroke", gridColor);
+      this.style.stroke = gridColor;
     });
-    // d3.selectAll(`#${this.#objectIDs.xAxisId} .domain`).each(function (d, i) {
-    //   this.remove();
-    // });
+    d3.selectAll(`#${this.#objectIDs.xAxisId} .domain`).each(function (d, i) {
+      this.remove();
+    });
     d3.selectAll(`#${this.#objectIDs.xAxisId} .tick text`).style(
       "fill",
       this.#colors.tickColor
@@ -2786,7 +2632,7 @@ class CandleStickChart {
       .attr("id", this.#objectIDs.candleInfoIdBackground)
       .attr("x", window.innerWidth > this.#config.mobileBreakPoint ? 20 : 0)
       .attr("y", window.innerWidth > this.#config.mobileBreakPoint ? 10 : 50)
-      .attr("width", this.#config.infoTextWidth ?? 50)
+      .attr("width", this.#config.infoTextWidth)
       .attr("height", 14)
       .attr("fill", this.#colors.background)
       .style("display", "none");
@@ -2805,7 +2651,7 @@ class CandleStickChart {
       .attr("id", this.#objectIDs.candleInfoIdBackgroundPosition)
       .attr("x", window.innerWidth > this.#config.mobileBreakPoint ? 20 : 0)
       .attr("y", window.innerWidth > this.#config.mobileBreakPoint ? 30 : 70)
-      .attr("width", this.#config.infoTextWidthMeta ?? 50)
+      .attr("width", this.#config.infoTextWidthMeta)
       .attr("height", 14)
       .attr("fill", this.#colors.background)
       .style("display", "none");
@@ -2819,12 +2665,11 @@ class CandleStickChart {
       .attr("y", window.innerWidth > this.#config.mobileBreakPoint ? 40 : 80)
       .style("fill", this.#colors.candleInfoText);
   }
-
   #createLockerGroup() {
     d3.select(`#${this.#objectIDs.svgId}`)
       .append("foreignObject")
-      .attr("width", this.#config.svgWidth ?? window.innerWidth)
-      .attr("height", this.#config.svgHeight ?? window.innerHeight - 50)
+      .attr("width", this.#config.svgWidth)
+      .attr("height", this.#config.svgHeight)
       .selectAll()
       .data([1])
       .enter()
@@ -2839,12 +2684,10 @@ class CandleStickChart {
       .attr("class", "candle-locker");
   }
   #createLockerBody() {
-    d3.selectAll<SVGElement, IOHLCVCandleData>(
-      `#${this.#objectIDs.candleContainerId} .candle-locker`
-    )
+    d3.selectAll(`#${this.#objectIDs.candleContainerId} .candle-locker`)
       .append("rect")
       .attr("width", this.#candleLockerWidth)
-      .attr("height", this.#config.svgHeight ?? 0)
+      .attr("height", this.#config.svgHeight)
       .attr(
         "x",
         (d) => this.#xScaleFunc(parseDate(d.date)) - this.#candleLockerWidth / 2
@@ -2867,15 +2710,13 @@ class CandleStickChart {
   }
 
   #createCandlesBody() {
-    d3.selectAll<SVGElement, IOHLCVCandleData>(
-      `#${this.#objectIDs.candleContainerId} .candle`
-    )
+    d3.selectAll(`#${this.#objectIDs.candleContainerId} .candle`)
       .append("rect")
       .attr("width", this.#candleWidth)
       .attr("height", (d) =>
         d.open > d.close
           ? this.#yScaleFunc(d.close) - this.#yScaleFunc(d.open)
-          : this.#yScaleFunc(d.open - this.#yScaleFunc(d.close))
+          : this.#yScaleFunc(d.open) - this.#yScaleFunc(d.close)
       )
       .attr(
         "x",
@@ -2897,9 +2738,7 @@ class CandleStickChart {
   }
 
   #createCandlesHigh() {
-    d3.selectAll<SVGElement, IOHLCVCandleData>(
-      `#${this.#objectIDs.candleContainerId} .candle`
-    )
+    d3.selectAll(`#${this.#objectIDs.candleContainerId} .candle`)
       .append("rect")
       .attr("width", this.#config.candleTailWidth)
       .attr("height", (d) =>
@@ -2921,9 +2760,7 @@ class CandleStickChart {
   }
 
   #createCandlesLow() {
-    d3.selectAll<SVGElement, IOHLCVCandleData>(
-      `#${this.#objectIDs.candleContainerId} .candle`
-    )
+    d3.selectAll(`#${this.#objectIDs.candleContainerId} .candle`)
       .append("rect")
       .attr("width", this.#config.candleTailWidth)
       .attr("height", (d) =>
@@ -3006,12 +2843,9 @@ class CandleStickChart {
       .style("color", this.#colors.candleInfoText)
       .text("Edit SMA")
       .on("click", () => {
-        const newPeriod = parseInt(
-          prompt("Enter new SMA period:", this.smaPeriod.toString()) || "5"
-        );
-
+        const newPeriod = prompt("Enter new SMA period:", this.smaPeriod);
         if (newPeriod && !isNaN(newPeriod) && newPeriod > 0) {
-          this.smaPeriod = newPeriod;
+          this.smaPeriod = parseInt(newPeriod);
           this.#drawSMA();
         }
       });
@@ -3043,7 +2877,7 @@ class CandleStickChart {
       .style("display", "flex")
       .style("gap", "10px");
 
-    const intervals: TInterval[] = ["1D", "1H", "4H", "1M"];
+    const intervals = ["1D", "1H", "4H", "1M"];
     d3.select("#time-interval-buttons")
       .selectAll("div")
       .data(intervals)
@@ -3088,80 +2922,66 @@ class CandleStickChart {
       .style("top", "10px")
       .style("right", "10px");
 
-    const toolsBtnSma = document.querySelector(
+    document.querySelector(
       `#${this.#objectIDs.toolsBtnsContainer} #tools-btn-sma`
-    );
-    if (toolsBtnSma) {
-      toolsBtnSma.innerHTML = `
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <path fill-rule="evenodd" clip-rule="evenodd" d="M17 21H7C4.791 21 3 19.209 3 17V7C3 4.791 4.791 3 7 3H17C19.209 3 21 4.791 21 7V17C21 19.209 19.209 21 17 21Z" stroke="#FFF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M3 15L10 10L14 14L21 9" stroke="#FFF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-  </svg>
-  `;
-    }
+    ).innerHTML = `
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path fill-rule="evenodd" clip-rule="evenodd" d="M17 21H7C4.791 21 3 19.209 3 17V7C3 4.791 4.791 3 7 3H17C19.209 3 21 4.791 21 7V17C21 19.209 19.209 21 17 21Z" stroke="#FFF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M3 15L10 10L14 14L21 9" stroke="#FFF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
+`;
 
-    const toolsBtn0 = document.querySelector(
+    document.querySelector(
       `#${this.#objectIDs.toolsBtnsContainer} #tools-btn-0`
-    );
-    if (toolsBtn0) {
-      toolsBtn0.innerHTML = `
-      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 20 20">
-        <g fill="none" fill-rule="evenodd" stroke="${
-          this.#colors.deActiveTools
-        }" stroke-linecap="round" stroke-linejoin="round" transform="matrix(0 1 1 0 2.5 2.5)">
-        <path d="m3.98652376 1.07807068c-2.38377179 1.38514556-3.98652376 3.96636605-3.98652376 6.92192932 0 4.418278 3.581722 8 8 8s8-3.581722 8-8-3.581722-8-8-8"/>
-        <path d="m4 1v4h-4" transform="matrix(1 0 0 -1 0 6)"/>
-        </g>
-      </svg>`;
-    }
-
-    const toolsBtn1 = document.querySelector(
-      `#${this.#objectIDs.toolsBtnsContainer} #tools-btn-1`
-    );
-
-    if (toolsBtn1) {
-      toolsBtn1.innerHTML = `
-      <svg xmlns="http://www.w3.org/2000/svg" fill="${
+    ).innerHTML = `
+    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 20 20">
+      <g fill="none" fill-rule="evenodd" stroke="${
         this.#colors.deActiveTools
-      }" width="18" height="18" viewBox="2 2 30 30" id="icon">
-        <defs>
-          <style>
-            .cls-1 {
-              fill: none;
-            }
-          </style>
-        </defs>
-        <path d="M31,29.5859l-4.6885-4.6884a8.028,8.028,0,1,0-1.414,1.414L29.5859,31ZM20,26a6,6,0,1,1,6-6A6.0066,6.0066,0,0,1,20,26Z"/>
-        <path d="M8,26H4a2.0021,2.0021,0,0,1-2-2V20H4v4H8Z"/>
-        <rect x="2" y="12" width="2" height="4"/>
-        <path d="M26,8H24V4H20V2h4a2.0021,2.0021,0,0,1,2,2Z"/>
-        <rect x="12" y="2" width="4" height="2"/>
-        <path d="M4,8H2V4A2.0021,2.0021,0,0,1,4,2H8V4H4Z"/>
-        <rect id="_Transparent_Rectangle_" data-name="&lt;Transparent Rectangle&gt;" class="cls-1" width="32" height="32"/>
-      </svg>`;
-    }
+      }" stroke-linecap="round" stroke-linejoin="round" transform="matrix(0 1 1 0 2.5 2.5)">
+      <path d="m3.98652376 1.07807068c-2.38377179 1.38514556-3.98652376 3.96636605-3.98652376 6.92192932 0 4.418278 3.581722 8 8 8s8-3.581722 8-8-3.581722-8-8-8"/>
+      <path d="m4 1v4h-4" transform="matrix(1 0 0 -1 0 6)"/>
+      </g>
+    </svg>`;
 
-    const toolsBtn2 = document.querySelector(
+    document.querySelector(
+      `#${this.#objectIDs.toolsBtnsContainer} #tools-btn-1`
+    ).innerHTML = `
+    <svg xmlns="http://www.w3.org/2000/svg" fill="${
+      this.#colors.deActiveTools
+    }" width="18" height="18" viewBox="2 2 30 30" id="icon">
+      <defs>
+        <style>
+          .cls-1 {
+            fill: none;
+          }
+        </style>
+      </defs>
+      <path d="M31,29.5859l-4.6885-4.6884a8.028,8.028,0,1,0-1.414,1.414L29.5859,31ZM20,26a6,6,0,1,1,6-6A6.0066,6.0066,0,0,1,20,26Z"/>
+      <path d="M8,26H4a2.0021,2.0021,0,0,1-2-2V20H4v4H8Z"/>
+      <rect x="2" y="12" width="2" height="4"/>
+      <path d="M26,8H24V4H20V2h4a2.0021,2.0021,0,0,1,2,2Z"/>
+      <rect x="12" y="2" width="4" height="2"/>
+      <path d="M4,8H2V4A2.0021,2.0021,0,0,1,4,2H8V4H4Z"/>
+      <rect id="_Transparent_Rectangle_" data-name="&lt;Transparent Rectangle&gt;" class="cls-1" width="32" height="32"/>
+    </svg>`;
+
+    document.querySelector(
       `#${this.#objectIDs.toolsBtnsContainer} #tools-btn-2`
-    );
-
-    if (toolsBtn2) {
-      toolsBtn2.innerHTML = `
-      <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="21" height="21" viewBox="0 0 512 512" version="1.1">
-        <title>pan</title>
-        <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-            <g id="drop" fill="${
-              this.#colors.deActiveTools
-            }" transform="translate(42.666667, 42.666667)">
-                <path d="M234.666667,256 L234.666667,341.333333 L277.333333,341.333333 L213.333333,426.666667 L149.333333,341.333333 L192,341.333333 L192,256 L234.666667,256 Z M341.333333,149.333333 L426.666667,213.333333 L341.333333,277.333333 L341.333333,234.666667 L256,234.666667 L256,192 L341.333333,192 L341.333333,149.333333 Z M85.3333333,149.333333 L85.3333333,192 L170.666667,192 L170.666667,234.666667 L85.3333333,234.666667 L85.3333333,277.333333 L3.55271368e-14,213.333333 L85.3333333,149.333333 Z M213.333333,3.55271368e-14 L277.333333,85.3333333 L234.666667,85.3333333 L234.666667,170.666667 L192,170.666667 L192,85.3333333 L149.333333,85.3333333 L213.333333,3.55271368e-14 Z" id="Combined-Shape">
-                </path>
-            </g>
-        </g>
-      </svg>`;
-    }
+    ).innerHTML = `
+    <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="21" height="21" viewBox="0 0 512 512" version="1.1">
+      <title>pan</title>
+      <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+          <g id="drop" fill="${
+            this.#colors.deActiveTools
+          }" transform="translate(42.666667, 42.666667)">
+              <path d="M234.666667,256 L234.666667,341.333333 L277.333333,341.333333 L213.333333,426.666667 L149.333333,341.333333 L192,341.333333 L192,256 L234.666667,256 Z M341.333333,149.333333 L426.666667,213.333333 L341.333333,277.333333 L341.333333,234.666667 L256,234.666667 L256,192 L341.333333,192 L341.333333,149.333333 Z M85.3333333,149.333333 L85.3333333,192 L170.666667,192 L170.666667,234.666667 L85.3333333,234.666667 L85.3333333,277.333333 L3.55271368e-14,213.333333 L85.3333333,149.333333 Z M213.333333,3.55271368e-14 L277.333333,85.3333333 L234.666667,85.3333333 L234.666667,170.666667 L192,170.666667 L192,85.3333333 L149.333333,85.3333333 L213.333333,3.55271368e-14 Z" id="Combined-Shape">
+              </path>
+          </g>
+      </g>
+    </svg>`;
   }
 
-  #handleTimeIntervalChange(interval: TInterval) {
+  #handleTimeIntervalChange(interval) {
     console.log(`Time interval changed to: ${interval}`);
     this.stopLiveFeed();
     this.#loadData(interval);
@@ -3176,49 +2996,45 @@ class CandleStickChart {
     // this.draw();
   }
 
-  #modeHandler(mode: TMode) {
+  #modeHandler(mode) {
     this.#mode = mode;
     if (mode === "pan") {
-      const element = document.querySelector(
-        `#${this.#objectIDs.toolsBtnsContainer} #tools-btn-2 svg g g`
-      );
-      if (element) {
-        element.setAttribute("fill", this.#colors.activeTools);
-      }
+      document
+        .querySelector(
+          `#${this.#objectIDs.toolsBtnsContainer} #tools-btn-2 svg g g`
+        )
+        .setAttribute("fill", this.#colors.activeTools);
 
       d3.select(`#${this.#objectIDs.toolsBtnsContainer} #tools-btn-2`).style(
         "border",
         `1px solid ${this.#colors.activeTools}`
       );
 
-      const toolsBtn1Svg = document.querySelector(
-        `#${this.#objectIDs.toolsBtnsContainer} #tools-btn-1 svg`
-      );
-      if (toolsBtn1Svg) {
-        toolsBtn1Svg.setAttribute("fill", this.#colors.deActiveTools);
-      }
+      document
+        .querySelector(
+          `#${this.#objectIDs.toolsBtnsContainer} #tools-btn-1 svg`
+        )
+        .setAttribute("fill", this.#colors.deActiveTools);
       d3.select(`#${this.#objectIDs.toolsBtnsContainer} #tools-btn-1`).style(
         "border",
         `1px solid ${this.#colors.deActiveTools}`
       );
     } else if (mode === "zoom") {
-      const element = document.querySelector(
-        `#${this.#objectIDs.toolsBtnsContainer} #tools-btn-2 svg g g`
-      );
-      if (element) {
-        element.setAttribute("fill", this.#colors.deActiveTools);
-      }
+      document
+        .querySelector(
+          `#${this.#objectIDs.toolsBtnsContainer} #tools-btn-2 svg g g`
+        )
+        .setAttribute("fill", this.#colors.deActiveTools);
       d3.select(`#${this.#objectIDs.toolsBtnsContainer} #tools-btn-2`).style(
         "border",
         `1px solid ${this.#colors.deActiveTools}`
       );
 
-      const toolsBtn1Svg = document.querySelector(
-        `#${this.#objectIDs.toolsBtnsContainer} #tools-btn-1 svg`
-      );
-      if (toolsBtn1Svg) {
-        toolsBtn1Svg.setAttribute("fill", this.#colors.activeTools);
-      }
+      document
+        .querySelector(
+          `#${this.#objectIDs.toolsBtnsContainer} #tools-btn-1 svg`
+        )
+        .setAttribute("fill", this.#colors.activeTools);
       d3.select(`#${this.#objectIDs.toolsBtnsContainer} #tools-btn-1`).style(
         "border",
         `1px solid ${this.#colors.activeTools}`
@@ -3236,7 +3052,7 @@ class CandleStickChart {
     this.draw();
   }
 
-  #xLineHandler(d, position?: number) {
+  #xLineHandler(d, position) {
     let xPosition;
     if (position) xPosition = position;
     else xPosition = this.#xScaleFunc(parseDate(d.date));
@@ -3248,7 +3064,7 @@ class CandleStickChart {
         .attr("x1", xPosition)
         .attr("y1", 0)
         .attr("x2", xPosition)
-        .attr("y2", this.#config.svgHeight ?? window.innerHeight - 50);
+        .attr("y2", this.#config.svgHeight);
     } else {
       d3.select(`#${this.#objectIDs.svgId}`)
         .insert("line", `#${this.#objectIDs.xAxisId}`)
@@ -3258,11 +3074,11 @@ class CandleStickChart {
         .attr("x1", xPosition)
         .attr("y1", 0)
         .attr("x2", xPosition)
-        .attr("y2", this.#config.svgHeight ?? window.innerHeight - 50);
+        .attr("y2", this.#config.svgHeight);
     }
   }
 
-  #xLabelHandler(d, position?: number) {
+  #xLabelHandler(d, position) {
     let xPosition;
     if (position) xPosition = position;
     else xPosition = this.#xScaleFunc(parseDate(d.date));
@@ -3272,25 +3088,19 @@ class CandleStickChart {
       d3.select(xLabel).attr(
         "transform",
         `translate(
-          ${
-            xPosition >=
-            (this.#config.svgWidth ?? window.innerWidth) -
-              this.#config.xLabelWidth / 2
-              ? (this.#config.svgWidth ?? window.innerWidth) -
-                this.#config.xLabelWidth
-              : xPosition <= this.#config.xLabelWidth / 2
-              ? 0
-              : xPosition - this.#config.xLabelWidth / 2
-          },${this.#config.svgHeight})`
+      ${
+        xPosition >= this.#config.svgWidth - this.#config.xLabelWidth / 2
+          ? this.#config.svgWidth - this.#config.xLabelWidth
+          : xPosition <= this.#config.xLabelWidth / 2
+          ? 0
+          : xPosition - this.#config.xLabelWidth / 2
+      },${this.#config.svgHeight})`
       );
-      const xLabelTextElement = document.querySelector(
+      document.querySelector(
         `#${this.#objectIDs.xLabelSelectorId} text`
+      ).innerHTML = d3.timeFormat(this.#config.timeFormat)(
+        this.#xScaleFunc.invert(xPosition)
       );
-      if (xLabelTextElement) {
-        xLabelTextElement.innerHTML = d3.timeFormat(this.#config.timeFormat)(
-          this.#xScaleFunc.invert(xPosition)
-        );
-      }
     } else {
       d3.select(`#${this.#objectIDs.svgId}`)
         .append("g")
@@ -3298,16 +3108,13 @@ class CandleStickChart {
         .attr(
           "transform",
           `translate(
-              ${
-                xPosition >=
-                (this.#config.svgWidth ?? window.innerWidth) -
-                  this.#config.xLabelWidth / 2
-                  ? (this.#config.svgWidth ?? window.innerWidth) -
-                    this.#config.xLabelWidth
-                  : xPosition <= this.#config.xLabelWidth / 2
-                  ? 0
-                  : xPosition - this.#config.xLabelWidth / 2
-              },${this.#config.svgHeight})`
+          ${
+            xPosition >= this.#config.svgWidth - this.#config.xLabelWidth / 2
+              ? this.#config.svgWidth - this.#config.xLabelWidth
+              : xPosition <= this.#config.xLabelWidth / 2
+              ? 0
+              : xPosition - this.#config.xLabelWidth / 2
+          },${this.#config.svgHeight})`
         );
 
       d3.select(`#${this.#objectIDs.xLabelSelectorId}`)
@@ -3324,20 +3131,17 @@ class CandleStickChart {
         .attr("x", 10)
         .attr("y", 15);
 
-      const xLabelTextElement = document.querySelector(
+      document.querySelector(
         `#${this.#objectIDs.xLabelSelectorId} text`
+      ).innerHTML = d3.timeFormat(this.#config.timeFormat)(
+        this.#xScaleFunc.invert(xPosition)
       );
-      if (xLabelTextElement) {
-        xLabelTextElement.innerHTML = d3.timeFormat(this.#config.timeFormat)(
-          this.#xScaleFunc.invert(xPosition)
-        );
-      }
     }
   }
 
   #drawLineChart() {
     const line = d3
-      .line<IOHLCVCandleData>()
+      .line()
       .x((d) => this.#xScaleFunc(parseDate(d.date)))
       .y((d) => this.#yScaleFunc(d.close))
       .curve(d3.curveMonotoneX); // Smooth line
@@ -3357,7 +3161,7 @@ class CandleStickChart {
       d3.select(yLine)
         .attr("x1", 0)
         .attr("y1", position)
-        .attr("x2", this.#config.svgWidth ?? window.innerWidth)
+        .attr("x2", this.#config.svgWidth)
         .attr("y2", position);
     } else {
       d3.select(`#${this.#objectIDs.svgId}`)
@@ -3367,7 +3171,7 @@ class CandleStickChart {
         .attr("stroke-dasharray", this.#config.selectoreStrokeDashArray)
         .attr("x1", 0)
         .attr("y1", position)
-        .attr("x2", this.#config.svgHeight ?? window.innerHeight - 50)
+        .attr("x2", this.#config.svgHeight)
         .attr("y2", position);
     }
   }
@@ -3378,25 +3182,19 @@ class CandleStickChart {
       d3.select(yLabel).attr(
         "transform",
         `translate(${this.#config.svgWidth},
-          ${
-            position >=
-            (this.#config.svgHeight ?? window.innerHeight - 50) -
-              this.#config.yLabelHeight / 2
-              ? (this.#config.svgHeight ?? window.innerHeight - 50) -
-                this.#config.yLabelHeight
-              : position <= this.#config.yLabelHeight / 2
-              ? 0
-              : position - this.#config.yLabelHeight / 2
-          })`
+        ${
+          position >= this.#config.svgHeight - this.#config.yLabelHeight / 2
+            ? this.#config.svgHeight - this.#config.yLabelHeight
+            : position <= this.#config.yLabelHeight / 2
+            ? 0
+            : position - this.#config.yLabelHeight / 2
+        })`
       );
-      const yLabelTextElement = document.querySelector(
+      document.querySelector(
         `#${this.#objectIDs.yLabelSelectorId} text`
-      );
-      if (yLabelTextElement) {
-        yLabelTextElement.innerHTML = this.#yScaleFunc
-          .invert(position)
-          .toFixed(this.#config.decimal);
-      }
+      ).innerHTML = this.#yScaleFunc
+        .invert(position)
+        .toFixed(this.#config.decimal);
     } else {
       d3.select(`#${this.#objectIDs.svgId}`)
         .append("g")
@@ -3404,22 +3202,19 @@ class CandleStickChart {
         .attr(
           "transform",
           `translate(${this.#config.svgWidth},
-              ${
-                position >=
-                (this.#config.svgHeight ?? window.innerHeight - 50) -
-                  this.#config.yLabelHeight / 2
-                  ? (this.#config.svgHeight ?? window.innerHeight - 50) -
-                    this.#config.yLabelHeight
-                  : position <= this.#config.yLabelHeight / 2
-                  ? 0
-                  : position - this.#config.yLabelHeight / 2
-              })`
+            ${
+              position >= this.#config.svgHeight - this.#config.yLabelHeight / 2
+                ? this.#config.svgHeight - this.#config.yLabelHeight
+                : position <= this.#config.yLabelHeight / 2
+                ? 0
+                : position - this.#config.yLabelHeight / 2
+            })`
         );
 
       d3.select(`#${this.#objectIDs.yLabelSelectorId}`)
         .append("rect")
         .attr("fill", this.#colors.selectorLableBackground)
-        .attr("width", this.#config.yLabelWidth ?? 50)
+        .attr("width", this.#config.yLabelWidth)
         .attr("height", this.#config.yLabelHeight);
 
       d3.select(`#${this.#objectIDs.yLabelSelectorId}`)
@@ -3430,46 +3225,30 @@ class CandleStickChart {
         .attr("x", 5)
         .attr("y", 15);
 
-      const yLabelTextElement = document.querySelector(
+      document.querySelector(
         `#${this.#objectIDs.yLabelSelectorId} text`
-      );
-      if (yLabelTextElement) {
-        yLabelTextElement.innerHTML = this.#yScaleFunc
-          .invert(position)
-          .toFixed(1);
-      }
+      ).innerHTML = this.#yScaleFunc.invert(position).toFixed(1);
     }
   }
 
   #candleInfoHandler(d) {
     let isUp = d.open > d.close;
-    const candleInfoElement = document.getElementById(
-      this.#objectIDs.candleInfoId
-    );
-    if (candleInfoElement) {
-      candleInfoElement.innerHTML = `
-        O <tspan style='fill:${
-          isUp ? this.#colors.candleInfoTextUp : this.#colors.candleInfoTextDown
-        }'>${d.open.toFixed(this.#config.decimal)}</tspan> 
-        H <tspan style='fill:${
-          isUp ? this.#colors.candleInfoTextUp : this.#colors.candleInfoTextDown
-        }'>${d.high.toFixed(this.#config.decimal)}</tspan> 
-        L <tspan style='fill:${
-          isUp ? this.#colors.candleInfoTextUp : this.#colors.candleInfoTextDown
-        }'>${d.low.toFixed(this.#config.decimal)}</tspan> 
-        C <tspan style='fill:${
-          isUp ? this.#colors.candleInfoTextUp : this.#colors.candleInfoTextDown
-        }'>${d.close.toFixed(this.#config.decimal)}</tspan>
-        V <tspan style='fill:${
-          isUp ? this.#colors.candleInfoTextUp : this.#colors.candleInfoTextDown
-        }'>${d.volume.toFixed(this.#config.decimal)}</tspan>`;
-    }
-    const candleInfoBackground = document.getElementById(
+    document.getElementById(this.#objectIDs.candleInfoId).innerHTML = `
+    O <tspan style='fill:${
+      isUp ? this.#colors.candleInfoTextUp : this.#colors.candleInfoTextDown
+    }'>${d.open.toFixed(this.#config.decimal)}</tspan> 
+    H <tspan style='fill:${
+      isUp ? this.#colors.candleInfoTextUp : this.#colors.candleInfoTextDown
+    }'>${d.high.toFixed(this.#config.decimal)}</tspan> 
+    L <tspan style='fill:${
+      isUp ? this.#colors.candleInfoTextUp : this.#colors.candleInfoTextDown
+    }'>${d.low.toFixed(this.#config.decimal)}</tspan> 
+    C <tspan style='fill:${
+      isUp ? this.#colors.candleInfoTextUp : this.#colors.candleInfoTextDown
+    }'>${d.close.toFixed(this.#config.decimal)}</tspan>`;
+    document.getElementById(
       this.#objectIDs.candleInfoIdBackground
-    );
-    if (candleInfoBackground) {
-      candleInfoBackground.style.display = "block";
-    }
+    ).style.display = "block";
 
     if (d.long || d.short) {
       let text = "";
@@ -3489,48 +3268,26 @@ class CandleStickChart {
         this.#config.decimal
       )}</tspan>`;
 
-      const candleInfoElement = document.getElementById(
-        this.#objectIDs.candleInfoIdPosition
-      );
-      if (candleInfoElement) {
-        candleInfoElement.innerHTML = text;
-      }
-      const candleInfoBackgroundPosition = document.getElementById(
+      document.getElementById(this.#objectIDs.candleInfoIdPosition).innerHTML =
+        text;
+      document.getElementById(
         this.#objectIDs.candleInfoIdBackgroundPosition
-      );
-      if (candleInfoBackgroundPosition) {
-        candleInfoBackgroundPosition.style.display = "block";
-      }
+      ).style.display = "block";
     }
   }
 
   #candleInfoLeaveHandler() {
-    const candleInfoElement = document.getElementById(
-      this.#objectIDs.candleInfoId
-    );
-    if (candleInfoElement) {
-      candleInfoElement.innerHTML = ``;
-    }
-
-    const candleInfoBackground = document.getElementById(
+    document.getElementById(this.#objectIDs.candleInfoId).innerHTML = ``;
+    document.getElementById(
       this.#objectIDs.candleInfoIdBackground
-    );
-    if (candleInfoBackground) {
-      candleInfoBackground.style.display = "none";
-    }
+    ).style.display = "none";
 
-    const candleInfoPositionElement = document.getElementById(
+    document.getElementById(
       this.#objectIDs.candleInfoIdPosition
-    );
-    if (candleInfoPositionElement) {
-      candleInfoPositionElement.innerHTML = ``;
-    }
-    const candleInfoBackgroundPosition = document.getElementById(
+    ).innerHTML = ``;
+    document.getElementById(
       this.#objectIDs.candleInfoIdBackgroundPosition
-    );
-    if (candleInfoBackgroundPosition) {
-      candleInfoBackgroundPosition.style.display = "none";
-    }
+    ).style.display = "none";
   }
 
   #mouseMoveLockers(d) {
@@ -3557,19 +3314,10 @@ class CandleStickChart {
     let zoomBox2 = document.querySelector(`#${this.#objectIDs.zoomBoxId2}`);
     if (zoomBox2) zoomBox2.remove();
 
-    const containerElement = document.getElementById(
-      `${this.#objectIDs.candleContainerId}`
-    );
-    if (!(containerElement instanceof SVGSVGElement)) {
-      console.error("Candle container element is not an SVGSVGElement");
-      return;
-    }
-    if (!containerElement) {
-      console.error("Candle container element not found");
-      return;
-    }
-    let height = containerElement.height.baseVal.value;
-    let width = containerElement.width.baseVal.value;
+    let height = document.getElementById(`${this.#objectIDs.candleContainerId}`)
+      .height.baseVal.value;
+    let width = document.getElementById(`${this.#objectIDs.candleContainerId}`)
+      .width.baseVal.value;
 
     d3.select(`#${this.#objectIDs.candleContainerId}`)
       .selectAll()
@@ -3619,12 +3367,8 @@ class CandleStickChart {
 
     let minMaxZoom = d3.extent([this.#zoomPoint1, this.#zoomPoint2]);
 
-    let leftDate = parseDate(
-      this.#xScaleFunc.invert(minMaxZoom[0]).toISOString()
-    ).getTime();
-    let rightDate = parseDate(
-      this.#xScaleFunc.invert(minMaxZoom[1]).toISOString()
-    ).getTime();
+    let leftDate = parseDate(this.#xScaleFunc.invert(minMaxZoom[0]));
+    let rightDate = parseDate(this.#xScaleFunc.invert(minMaxZoom[1]));
 
     if (leftDate - rightDate === 0) {
       return;
@@ -3632,20 +3376,18 @@ class CandleStickChart {
 
     let filteredData = this.data.filter((x) => {
       return (
-        parseDate(x.date).getTime() > leftDate - this.#candleWidthDate &&
-        parseDate(x.date).getTime() < rightDate + this.#candleWidthDate
+        parseDate(x.date).getTime() >
+          leftDate.getTime() - this.#candleWidthDate &&
+        parseDate(x.date).getTime() <
+          rightDate.getTime() + this.#candleWidthDate
       );
     });
 
-    let oldZoomRange1 = this.#minMaxDate[0].getTime();
-    let oldZoomRange2 = this.#minMaxDate[1].getTime();
+    let oldZoomRange1 = this.#minMaxDate[0];
+    let oldZoomRange2 = this.#minMaxDate[1];
 
-    let newZoomRange1 = parseDate(
-      this.#xScaleFunc.invert(minMaxZoom[0]).toISOString()
-    ).getTime();
-    let newZoomRange2 = parseDate(
-      this.#xScaleFunc.invert(minMaxZoom[1]).toISOString()
-    ).getTime();
+    let newZoomRange1 = parseDate(this.#xScaleFunc.invert(minMaxZoom[0]));
+    let newZoomRange2 = parseDate(this.#xScaleFunc.invert(minMaxZoom[1]));
 
     this.#zoomFactor =
       (oldZoomRange2 - oldZoomRange1) / (newZoomRange2 - newZoomRange1);
@@ -3659,14 +3401,8 @@ class CandleStickChart {
 
   #handlePan(location) {
     let dateWidth = this.#zoomRange2 - this.#zoomRange1;
-    const containerElement = document.getElementById(
-      `${this.#objectIDs.candleContainerId}`
-    );
-    if (!(containerElement instanceof SVGSVGElement)) {
-      console.error("Candle container element is not an SVGSVGElement");
-      return;
-    }
-    let width = containerElement.width.baseVal.value;
+    let width = document.getElementById(`${this.#objectIDs.candleContainerId}`)
+      .width.baseVal.value;
 
     let fraction = location / width;
 
@@ -3687,23 +3423,17 @@ class CandleStickChart {
     this.draw();
   }
 
-  #handleScrollZoom(e: D3ZoomEvent<SVGSVGElement, unknown>) {
+  #handleScrollZoom(e) {
     let location = getCursorPoint(this.#objectIDs.svgId, e.sourceEvent);
     this.#zoomFactor *= e.transform.k > 1 ? 1.1 : 0.9;
 
-    let width = this.#minMaxDate[1].getTime() - this.#minMaxDate[0].getTime();
+    let width = parseDate(this.#minMaxDate[1]) - parseDate(this.#minMaxDate[0]);
 
     let newWidth = Math.round(width / this.#zoomFactor);
 
-    const svgElement = document.getElementById(
+    let svgWidth = document.getElementById(
       `${this.#objectIDs.candleContainerId}`
-    );
-    if (!svgElement || !(svgElement instanceof SVGSVGElement)) {
-      throw new Error(
-        "Candle container element not found or is not an SVG element"
-      );
-    }
-    let svgWidth = svgElement.width.baseVal.value;
+    ).width.baseVal.value;
 
     let target = this.#xScaleFunc.invert(location.x).getTime();
     let coeff = Math.round((newWidth * location.x) / svgWidth);
@@ -3908,14 +3638,8 @@ class CandleStickChart {
       thisProxy.#handleScrollZoom(e);
     });
 
-    d3.select<SVGSVGElement, unknown>(
-      `#${this.#objectIDs.svgId}` as unknown as SVGSVGElement
-    )
-      .call(
-        zoom as unknown as (
-          selection: d3.Selection<SVGSVGElement, unknown, null, undefined>
-        ) => void
-      )
+    d3.select(`#${this.#objectIDs.svgId}`)
+      .call(zoom)
       .on("mousedown.zoom", null)
       .on("touchstart.zoom", null)
       .on("touchmove.zoom", null)
@@ -4010,6 +3734,22 @@ class CandleStickChart {
     d3.zoom().on("zoom", null);
   }
 
+  setColors(colorObj) {
+    for (const key in colorObj) {
+      let color = colorObj[key];
+      this.#colors[key] = color;
+    }
+  }
+
+  setConfig(configObj) {
+    for (const key in configObj) {
+      let config = configObj[key];
+      this.#config[key] = config;
+    }
+
+    this.#calculateExtendConfigs();
+  }
+
   getColors() {
     return this.#colors;
   }
@@ -4028,12 +3768,8 @@ class CandleStickChart {
 
   destroy() {
     this.#removeEventListeners();
-    if (document.getElementById(this.#objectIDs.svgId)) {
-      const svgElement = document.getElementById(this.#objectIDs.svgId);
-      if (svgElement) {
-        svgElement.remove();
-      }
-    }
+    if (document.getElementById(this.#objectIDs.svgId))
+      document.getElementById(this.#objectIDs.svgId).remove();
   }
 
   #toggleChartType() {
@@ -4117,7 +3853,7 @@ class CandleStickChart {
       .attr("opacity", 0.7);
   }
 
-  #getTimeIntervalInMs(interval: TInterval) {
+  #getTimeIntervalInMs(interval) {
     switch (interval) {
       case "1D":
         return 24 * 60 * 60 * 1000; // 1 day
@@ -4159,15 +3895,16 @@ class CandleStickChart {
         break;
     }
 
-    let intervalValues: number[] = [];
+    let intervalValues = [];
     let updateCount = 0;
+    let currentCandle = null;
+
+    // Get the last candle as starting point
     const lastDataPoint = this.data[this.data.length - 1];
     let lastDate = parseDate(lastDataPoint.date);
 
-    // Get the last candle as starting point
-
     // Create an initial current candle
-    let currentCandle: IOHLCVCandleData = {
+    currentCandle = {
       date: new Date(
         lastDate.getTime() + this.#getTimeIntervalInMs(selectedTimeInterval)
       ).toISOString(),
@@ -4260,5 +3997,9 @@ chart.draw();
 // chart.startLiveFeed();
 
 window.addEventListener("resize", () => {
+  chart.setConfig({
+    width: window.innerWidth,
+    height: window.innerHeight - 50,
+  });
   chart.draw();
 });

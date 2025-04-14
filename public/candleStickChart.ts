@@ -4244,3 +4244,22 @@ class CandleStickChart {
     this.isLiveChart = false;
   }
 }
+
+export default CandleStickChart;
+
+let chart = new CandleStickChart(
+  window.innerWidth,
+  window.innerHeight - 50,
+  oneMinuteData,
+  "chart1"
+);
+chart.draw();
+// chart.startLiveFeed();
+
+window.addEventListener("resize", () => {
+  chart.setConfig({
+    width: window.innerWidth,
+    height: window.innerHeight - 50,
+  });
+  chart.draw();
+});
