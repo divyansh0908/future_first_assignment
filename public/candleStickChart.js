@@ -647,6 +647,8 @@ class CandleStickChart {
     this.#zoomRange2 = minMaxDate[1].getTime() + this.#candleWidthDate / 2;
     this.#createToolsBtns();
     this.#modeHandler("pan");
+    this.isLiveChart = false;
+    this.isLineChart = false;
   }
 
   /**
@@ -735,7 +737,7 @@ class CandleStickChart {
 
   #calculateInfoTextWidthMeta() {
     this.#config.infoTextWidthMeta =
-      (this.#maxPrice.toFixed(this.#config.decimal).toString().length * 3 +
+      (this.#maxPrice.toFixed(this.#config.decimal).toString().length * 4 +
         14) *
       this.#config.charWidth;
   }
@@ -796,6 +798,7 @@ class CandleStickChart {
       .domain(yMinMax)
       .range([0, this.#config.svgHeight]);
   }
+
 
   #calculateCandleWidth() {
     if (this.#filteredData.length === 0) {
@@ -1100,21 +1103,23 @@ class CandleStickChart {
 
   #createToolsBtns() {
     d3.select(`#${this.id}`)
-      .selectAll()
-      .data([0])
-      .enter()
-      .append("div")
-      .attr("id", this.#objectIDs.toolsBtnsContainer)
-      .style("display", "flex")
-      .style("height", "40px")
-      .style("justify-content", "end")
-      .style("gap", "10px")
-      .style(
-        "padding-right",
-        window.innerWidth > this.#config.mobileBreakPoint ? "20px" : "0"
-      )
-      .style("position", "relative")
-      .style("z-index", "2");
+    .selectAll()
+    .data([0])
+    .enter()
+    .append("div")
+    .attr("id", this.#objectIDs.toolsBtnsContainer)
+    .style("display", "flex")
+    .style("height", "40px")
+    .style("justify-content", "end")
+    .style("gap", "10px")
+    .style(
+      "padding-right",
+      window.innerWidth > this.#config.mobileBreakPoint ? "20px" : "0"
+    )
+    .style("position", "relative")
+    .style("z-index", "2");
+
+  
 
     d3.select(`#${this.#objectIDs.toolsBtnsContainer}`)
       .selectAll()
@@ -1141,7 +1146,7 @@ class CandleStickChart {
       .style("cursor", "pointer")
       .style("display", "flex")
       .style("justify-content", "center")
-      .style("align-items", "center")
+      .style("align-items", "center");
 
     d3.select(`#${this.id}`)
       .selectAll()
@@ -1191,6 +1196,29 @@ class CandleStickChart {
       .on("click", (e, d) => {
         this.#handleTimeIntervalChange(d);
       });
+
+    d3.select(`#${this.#objectIDs.toolsBtnsContainer}`)
+      .append("div")
+      .attr("id", "tools-btn-toggle-chart")
+      .style("width", "150px")
+      .style("height", "24px")
+      .style("border", `1px solid ${this.#colors.deActiveTools}`)
+      .style("border-radius", "4px")
+      .style("cursor", "pointer")
+      .style("display", "flex")
+      .style("justify-content", "center")
+      .style("align-items", "center")
+      .style("background-color", this.#colors.background)
+      .style("color", this.#colors.candleInfoText)
+      .text("Line Chart")
+      .on("click", () => {
+        this.#toggleChartType();
+      });
+
+    d3.select(`#${this.#objectIDs.toolsBtnsContainer}`)
+      .style("position", "absolute")
+      .style("top", "10px")
+      .style("right", "10px");
 
     document.querySelector(
       `#${this.#objectIDs.toolsBtnsContainer} #tools-btn-sma`
@@ -1412,6 +1440,22 @@ class CandleStickChart {
         this.#xScaleFunc.invert(xPosition)
       );
     }
+  }
+
+  #drawLineChart() {
+    const line = d3
+      .line()
+      .x((d) => this.#xScaleFunc(parseDate(d.date)))
+      .y((d) => this.#yScaleFunc(d.close))
+      .curve(d3.curveMonotoneX); // Smooth line
+
+    d3.select(`#${this.#objectIDs.svgId}`)
+      .append("path")
+      .datum(this.#filteredData)
+      .attr("fill", "none")
+      .attr("stroke", this.#colors.activeTools)
+      .attr("stroke-width", 2)
+      .attr("d", line);
   }
 
   #yLineHandler(d, position) {
@@ -2031,6 +2075,18 @@ class CandleStickChart {
       document.getElementById(this.#objectIDs.svgId).remove();
   }
 
+  #toggleChartType() {
+    this.isLineChart = !this.isLineChart;
+
+    // Update the button text
+    d3.select(
+      `#${this.#objectIDs.toolsBtnsContainer} #tools-btn-toggle-chart`
+    ).text(this.isLineChart ? "Candlestick Chart" : "Line Chart");
+
+    // Redraw the chart based on the selected type
+    this.draw();
+  }
+
   draw() {
     // this.#filteredData = this.data;
 
@@ -2038,16 +2094,23 @@ class CandleStickChart {
     this.#createLayout();
     this.#calculateXscale();
     this.#calculateYscale();
-    this.#calculateCandleWidth();
-    this.#createYaxis();
-    this.#createXaxis();
-    this.#createInfoText();
-    this.#createLockerGroup();
-    this.#createLockerBody();
-    this.#createCandlesGroup();
-    this.#createCandlesBody();
-    this.#createCandlesHigh();
-    this.#createCandlesLow();
+    if (this.isLineChart) {
+      this.#drawLineChart(); // Draw the line chart
+      this.#createYaxis();
+      this.#createXaxis();
+      this.#createInfoText();
+    } else {
+      this.#calculateCandleWidth();
+      this.#createYaxis();
+      this.#createXaxis();
+      this.#createInfoText();
+      this.#createLockerGroup();
+      this.#createLockerBody();
+      this.#createCandlesGroup();
+      this.#createCandlesBody();
+      this.#createCandlesHigh();
+      this.#createCandlesLow();
+    }
     // this.#createShortPositions();
     // this.#createLongPositions();
     // this.#createStopLosses();
